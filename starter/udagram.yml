@@ -133,7 +133,8 @@ Resources:
       UnhealthyThresholdCount: 5
       Port: 80
       Protocol: HTTP
-      VpcId: !ImportValue "${EnvironmentName}-VPCID"
+      VpcId: !ImportValue
+        Fn::Sub: "${EnvironmentName}-VPCID"
 
 Outputs:
   LoadBalancerDNSName:
