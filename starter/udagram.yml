@@ -107,7 +107,7 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
       Subnets:
-        - !ImportValue !Sub "${EnvironmentName}-PUB-NETS"
+        - !ImportValue "${EnvironmentName}-PUB-NETS"
       SecurityGroups:
         - Ref: LoadBalancerSecurityGroup
 
