@@ -25,7 +25,8 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: !Sub "${EnvironmentName} - Security Group"
-      VpcId: !ImportValue "${EnvironmentName}-VPCID"
+      VpcId: !ImportValue:
+        Fn::Sub: "${EnvironmentName}-VPCID"
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 80
@@ -59,8 +60,8 @@ Resources:
   AutoScalingGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
-      VPCZoneIdentifier:
-        - !ImportValue "${EnvironmentName}-PRIV-NETS"
+      VPCZoneIdentifier: !ImportValue:
+        Fn::Sub: "${EnvironmentName}-PRIV-NETS"
       LaunchTemplate:
         LaunchTemplateId: !Ref LaunchTemplate
         Version: !GetAtt LaunchTemplate.LatestVersionNumber
@@ -96,7 +97,8 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: !Sub "${EnvironmentName} - Load Balancer Security Group"
-      VpcId: !ImportValue "${EnvironmentName}-VPCID"
+      VpcId: !ImportValue
+        Fn::Sub: "${EnvironmentName}-VPCID"
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 80
@@ -106,8 +108,8 @@ Resources:
   LoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
-      Subnets:
-        - !ImportValue "${EnvironmentName}-PUB-NETS"
+      Subnets: !ImportValue:
+        Fn::Sub: "${EnvironmentName}-PUB-NETS"
       SecurityGroups:
         - Ref: LoadBalancerSecurityGroup
 
