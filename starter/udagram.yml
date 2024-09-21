@@ -60,9 +60,8 @@ Resources:
   AutoScalingGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
-      VPCZoneIdentifier:
-        - !ImportValue Fn::Sub: "${EnvironmentName}-PRI1-SN"
-        - !ImportValue Fn::Sub: "${EnvironmentName}-PRI2-SN"
+      VPCZoneIdentifier: !ImportValue
+        Fn::Sub: "${EnvironmentName}-PRIV-NETS"
       LaunchTemplate:
         LaunchTemplateId: !Ref LaunchTemplate
         Version: !GetAtt LaunchTemplate.LatestVersionNumber
