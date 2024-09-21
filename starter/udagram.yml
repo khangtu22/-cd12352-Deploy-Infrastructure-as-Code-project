@@ -60,8 +60,8 @@ Resources:
   AutoScalingGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
-      VPCZoneIdentifier: !ImportValue
-        Fn::Sub: "${EnvironmentName}-PRIV-NETS"
+      VPCZoneIdentifier:
+        !Split [ ",", !ImportValue Fn::Sub: "${EnvironmentName}-PRIV-NETS" ]
       LaunchTemplate:
         LaunchTemplateId: !Ref LaunchTemplate
         Version: !GetAtt LaunchTemplate.LatestVersionNumber
@@ -108,8 +108,8 @@ Resources:
   LoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
-      Subnets: !ImportValue
-        Fn::Sub: "${EnvironmentName}-PUB-NETS"
+      Subnets:
+        !Split [ ",", !ImportValue Fn::Sub: "${EnvironmentName}-PUB-NETS" ]
       SecurityGroups:
         - Ref: LoadBalancerSecurityGroup
 
