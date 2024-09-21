@@ -2,8 +2,6 @@ Parameters:
   EnvironmentName:
     Type: String
     Description: Tag name for the resources
-    AllowedPattern: "^[a-zA-Z0-9-_]+$"
-    ConstraintDescription: "Environment name should only contain alphanumeric characters, dashes, and underscores."
 
   AsgDesiredCapacity:
     Type: Number
@@ -61,8 +59,10 @@ Resources:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
       VPCZoneIdentifier:
-        - !ImportValue "${EnvironmentName}-PRI1-SN"
-        - !ImportValue "${EnvironmentName}-PRI2-SN"
+        - !ImportValue
+          Fn::Sub: "${EnvironmentName}-PRI1-SN"
+        - !ImportValue
+          Fn::Sub: "${EnvironmentName}-PRI2-SN"
       LaunchTemplate:
         LaunchTemplateId: !Ref LaunchTemplate
         Version: !GetAtt LaunchTemplate.LatestVersionNumber
@@ -110,8 +110,10 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
       Subnets:
-        - !ImportValue "${EnvironmentName}-PUB1-SN"
-        - !ImportValue "${EnvironmentName}-PUB2-SN"
+        - !ImportValue
+          Fn::Sub: "${EnvironmentName}-PUB1-SN"
+        - !ImportValue
+          Fn::Sub: "${EnvironmentName}-PUB2-SN"
       SecurityGroups:
         - Ref: LoadBalancerSecurityGroup
 
