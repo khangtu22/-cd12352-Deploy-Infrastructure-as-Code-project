@@ -1,49 +1,71 @@
-# ND9991 - Course 2 - Infrastructure as Code
+# Overview
+This README provides instructions for creating and deleting the Udagram application stack and the associated network stack using AWS CloudFormation. The scripts provided automate the process of managing these stacks.
+Prerequisites
+AWS CLI installed and configured with appropriate permissions.
+Access to the CloudFormation service in your AWS account.
+The necessary template files (udagram.yml, network.yml) and parameters files (udagram-parameters.json, network-parameters.json) must be available in your working directory.
+Scripts
+1. Create Stacks
+   Udagram Application Stack
+   To create the Udagram application stack, use the following script:
+   bash
+   #!/bin/bash
 
-This repository contains the starter code for the final project of course 2 Infrastructure as Code in the Cloud DevOps Engineer Nanodegree.
+# Create the Udagram application stack
+aws cloudformation create-stack \
+--stack-name UdagramAppStack \
+--template-body file://udagram.yml \
+--parameters file://udagram-parameters.json \
+--capabilities CAPABILITY_NAMED_IAM
 
-Please note that all supporting material for this course can be found in [this Github repository](https://github.com/udacity/cd12352-Deploy-Infrastructure-as-Code).
+# Check if the stack creation was successful
+if [ $? -ne 0 ]; then
+echo "Failed to create UdagramAppStack"
+exit 1
+fi
 
-# Deploy a high-availability web app using CloudFormation
+echo "App created successfully!"
 
-In this project, you’ll deploy web servers for a highly available web app using CloudFormation. You will write the code that creates and deploys the infrastructure and application for an Instagram-like app from the ground up. You will begin with deploying the networking components, followed by servers, security roles and software.  The procedure you follow here will become part of your portfolio of cloud projects. You’ll do it exactly as it’s done on the job - following best practices and scripting as much as possible. 
+Network and Servers Stack
+To create the network and servers stack, use this script:
+bash
+#!/bin/bash
 
-## Getting Started
+# Create the network and servers stack
+aws cloudformation create-stack \
+--stack-name my-network-servers-stack \
+--template-body file://network.yml \
+--parameters file://network-parameters.json \
+--capabilities CAPABILITY_IAM
 
-### Dependencies
+# Check if the stack creation was successful
+if [ $? -ne 0 ]; then
+echo "Failed to create my-network-servers-stack"
+exit 1
+fi
 
-1. AWS CLI installed and configured in your workspace using an AWS IAM role with Administrator permissions (as reviewed in the course).
+echo "Network created successfully!"
 
-2. Access to a diagram creator software of your choice.
+2. Delete Stacks
+   Delete Network and Servers Stack
+   To delete the network and servers stack, run the following script:
+   bash
+   #!/bin/bash
 
-3. Your favorite IDE or text editor ready to work.
+# Delete the network and servers stack
+aws cloudformation delete-stack --stack-name my-network-servers-stack
 
-### Installation
+# Check if the deletion was successful
+if [ $? -ne 0 ]; then
+echo "Failed to delete my-network-servers-stack"
+exit 1
+fi
 
-You can get started by cloning this repo in your local workspace:
+echo "Network stacks deleted successfully!"
 
-```
-git clone git@github.com:udacity/-cd12352-Deploy-Infrastructure-as-Code-project.git
-```
-
-## Testing
-
-No tests required for this project.
-
-## Project Instructions
-
-1. Design your solution diagram using a tool of your choice and export it into an image file.
-
-2. Add all the CloudFormation networking resources and parameters to the `network.yml` and `network-parameters.json` files inside the `starter` folder of this repo.
-
-3. Add all the CloudFormation application resources and parameters to the `udagram.yml` and `udagram-parameters.json` files inside the `starter` folder of this repo.
-
-4. Create any required script files to automate spin up and tear down of the CloudFormation stacks.
-
-5. Update the README.md file in the `starter` folder with creation and deletion instructions, as well as any useful information regarding your solution.
-   
-6.  Submit your solution as a GitHub link or a zipped file containing the diagram image, CloudFormation yml and json files, automation scripts and README file.
-
-## License
-
-[License](LICENSE.txt)
+Usage Instructions
+Create Stacks:
+Execute create_stacks_app.sh to set up the Udagram application.
+Execute create_stacks_network.sh to set up the network and servers.
+Delete Stacks:
+Execute delete_network.sh when you need to remove the network and servers stack.
