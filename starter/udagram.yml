@@ -1,18 +1,149 @@
-Description: CD12352 - Infrastructure as Code Project - Udagram
-
 Parameters:
-  # Add your parameters here
+  EnvironmentName:
+    Type: String
+    Description: Tag name for the resources
+    AllowedPattern: "^[a-zA-Z0-9-_]+$"
+    ConstraintDescription: "Environment name should only contain alphanumeric characters, dashes, and underscores."
+
+  AsgDesiredCapacity:
+    Type: Number
+    Default: 2
+    Description: Desired number of EC2 instances in the Auto Scaling Group
+    MinValue: 1
+    MaxValue: 6
+
+  VolumeSize:
+    Type: Number
+    Default: 8
+    Description: Volume size (GB) of the instances
+    MinValue: 8
+    MaxValue: 100
 
 Resources:
-  # Add your resources here
-  # We include a portion of the LaunchTemplate resource so you can use the UserData.
-  WebAppLaunchTemplate:
+  # Security Group for EC2
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: !Sub "${EnvironmentName} - Security Group"
+      VpcId: !ImportValue "${EnvironmentName}-VPCID"
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          SourceSecurityGroupId: !Ref LoadBalancerSecurityGroup
+
+  # Launch Template for EC2 Instances
+  LaunchTemplate:
     Type: AWS::EC2::LaunchTemplate
-    Properties: 
+    Properties:
       LaunchTemplateData:
         UserData:
           Fn::Base64: |
             #!/bin/bash
             apt-get update -y
-            sudo apt-get install nginx -y
-            service nginx start
+            apt-get install -y nginx
+            systemctl start nginx
+            echo "it works! Udagram, Udacity" > /var/www/html/index.html
+        ImageId: ami-0e86e20dae9224db8
+        InstanceType: t2.micro
+        Monitoring:
+          Enabled: true # Enable detailed monitoring for better insights
+        SecurityGroupIds:
+          - !Ref SecurityGroup
+        BlockDeviceMappings:
+          - DeviceName: "/dev/sdk"
+            Ebs:
+              VolumeSize: !Ref VolumeSize
+
+  # Auto Scaling Group
+  AutoScalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      VPCZoneIdentifier:
+        - !ImportValue "${EnvironmentName}-PRIV-NETS"
+      LaunchTemplate:
+        LaunchTemplateId: !Ref LaunchTemplate
+        Version: !GetAtt LaunchTemplate.LatestVersionNumber
+      MinSize: 1
+      MaxSize: 6
+      DesiredCapacity: !Ref AsgDesiredCapacity
+      TargetGroupARNs:
+        - Ref: TargetGroup
+
+  # Scaling Policies (Optional but recommended)
+  ASGScalingPolicyUp:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AutoScalingGroupName: !Ref AutoScalingGroup
+      PolicyType: TargetTrackingScaling
+      TargetTrackingConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ASGAverageCPUUtilization
+        TargetValue: 70.0
+
+  ASGScalingPolicyDown:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AutoScalingGroupName: !Ref AutoScalingGroup
+      PolicyType: TargetTrackingScaling
+      TargetTrackingConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ASGAverageCPUUtilization
+        TargetValue: 30.0
+
+  # Load Balancer Security Group
+  LoadBalancerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: !Sub "${EnvironmentName} - Load Balancer Security Group"
+      VpcId: !ImportValue "${EnvironmentName}-VPCID"
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+
+  LoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Subnets:
+        - !ImportValue "${EnvironmentName}-PUB1-SN"
+        - !ImportValue "${EnvironmentName}-PUB2-SN"
+      SecurityGroups:
+        - Ref: LoadBalancerSecurityGroup
+
+  Listener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroup
+      LoadBalancerArn: !Ref LoadBalancer
+      Port: 80
+      Protocol: HTTP
+
+  # Target Group for ALB
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 10
+      HealthCheckPath: /
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 8
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 5
+      Port: 80
+      Protocol: HTTP
+      VpcId: !ImportValue "${EnvironmentName}-VPCID"
+
+Outputs:
+  LoadBalancerDNSName:
+    Value: !GetAtt LoadBalancer.DNSName
+    Export:
+      Name: !Sub "${EnvironmentName}-LoadBalancer-DNS"
+
+  AutoScalingGroupName:
+    Description: The name of the auto-scaling group
+    Value: !Ref AutoScalingGroup
+    Export:
+      Name: !Sub "${EnvironmentName}-AutoScalingGroupName"

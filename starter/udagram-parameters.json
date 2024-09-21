@@ -1,6 +1,14 @@
 [
 	{
-		"ParameterKey": "Add you parameters here",
-		"ParameterValue": "Add you parameters here"
+		"ParameterKey": "EnvironmentName",
+		"ParameterValue": "UdagramWebApp"
+	},
+	{
+		"ParameterKey": "AsgDesiredCapacity",
+		"ParameterValue": "2"
+	},
+	{
+		"ParameterKey": "VolumeSize",
+		"ParameterValue": "20"
 	}
 ]
